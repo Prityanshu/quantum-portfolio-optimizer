@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Portfolio Optimizer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .metric-card h3 {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .metric-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .allocations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .allocations-table th,
+        .allocations-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .allocations-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .allocations-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e1e5e9;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #c33;
+        }
+
+        .success {
+            background: #efe;
+            color: #363;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #363;
+        }
+
+        .visualization-container {
+            margin-top: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 15px 15px 0 0;
+            overflow: hidden;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: white;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .quantum-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Quantum Particles Background -->
+    <div class="quantum-particles">
+        <div class="quantum-particle" style="top: 10%; left: 5%; animation-delay: 0s;"></div>
+        <div class="quantum-particle" style="top: 20%; left: 80%; animation-delay: 1s;"></div>
+        <div class="quantum-particle" style="top: 60%; left: 10%; animation-delay: 2s;"></div>
+        <div class="quantum-particle" style="top: 80%; left: 90%; animation-delay: 0.5s;"></div>
+        <div class="quantum-particle" style="top: 40%; left: 70%; animation-delay: 1.5s;"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-atom"></i> Quantum Portfolio Optimizer</h1>
+            <p>Advanced portfolio optimization using quantum computing algorithms with real-time analytics and interactive visualizations</p>
+            <div class="quantum-badge">
+                <i class="fas fa-rocket"></i> Powered by QAOA & Quantum-Inspired Algorithms
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Configuration Panel -->
+            <div class="card input-section">
+                <h2><i class="fas fa-cog"></i> Portfolio Configuration</h2>
+                
+                <div class="form-group">
+                    <label for="investment-amount">
+                        <i class="fas fa-dollar-sign"></i> Investment Amount ($)
+                    </label>
+                    <input type="number" id="investment-amount" value="100000" min="1000" step="1000" placeholder="Enter investment amount">
+                </div>
+
+                <div class="form-group">
+                    <label for="stock-symbols">
+                        <i class="fas fa-chart-line"></i> Stock Symbols
+                    </label>
+                    <textarea id="stock-symbols" rows="4" placeholder="Enter stock symbols separated by commas (e.g., AAPL, GOOGL, MSFT, TSLA, AMZN)">AAPL, GOOGL, MSFT, TSLA, AMZN</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="optimization-method">
+                        <i class="fas fa-brain"></i> Optimization Method
+                    </label>
+                    <select id="optimization-method">
+                        <option value="advanced_qaoa">🚀 Advanced QAOA (Recommended)</option>
+                        <option value="qaoa">⚛️ QAOA Algorithm</option>
+                        <option value="quantum_inspired">🔮 Quantum-Inspired</option>
+                        <option value="mpt">📊 Classical MPT</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="risk-tolerance">
+                        <i class="fas fa-shield-alt"></i> Risk Tolerance
+                    </label>
+                    <select id="risk-tolerance">
+                        <option value="conservative">🛡️ Conservative</option>
+                        <option value="moderate" selected>⚖️ Moderate</option>
+                        <option value="aggressive">🚀 Aggressive</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantum-backend">
+                        <i class="fas fa-microchip"></i> Quantum Backend
+                    </label>
+                    <select id="quantum-backend">
+                        <option value="aer_simulator">🔬 AER Simulator</option>
+                        <option value="statevector_simulator">🌊 Statevector Simulator</option>
+                        <option value="mps_simulator">📐 MPS Simulator</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="qaoa-layers">
+                        <i class="fas fa-layer-group"></i> QAOA Layers
+                    </label>
+                    <input type="number" id="qaoa-layers" value="3" min="1" max="10">
+                </div>
+
+                <div class="form-group">
+                    <label for="max-iterations">
+                        <i class="fas fa-sync-alt"></i> Max Iterations
+                    </label>
+                    <input type="number" id="max-iterations" value="100" min="10" max="500">
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="validateStocks()">
+                        <i class="fas fa-check-circle"></i> Validate Stocks
+                    </button>
+                    
+                    <button class="btn btn-primary" onclick="optimizePortfolio()">
+                        <i class="fas fa-rocket"></i> Optimize Portfolio
+                    </button>
+                    
+                    <button class="btn btn-success" onclick="testAdvancedQuantum()">
+                        <i class="fas fa-flask"></i> Test Advanced Quantum
+                    </button>
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="progress-container" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div id="progress-text" style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: var(--text-secondary);">
+                        Initializing quantum optimization...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="card results-section">
+                <h2><i class="fas fa-chart-line"></i> Optimization Results</h2>
+                
+                <!-- Server Status -->
+                <div id="status-indicator" class="status-indicator status-online">
+                    <i class="fas fa-circle"></i> Server Online
+                </div>
+
+                <!-- Loading State -->
+                <div id="loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <span>Processing quantum optimization...</span>
+                </div>
+
+                <!-- Messages -->
+                <div id="error-message" class="error" style="display: none;"></div>
+                <div id="success-message" class="success" style="display: none;"></div>
+                <div id="warning-message" class="warning" style="display: none;"></div>
+                <div id="info-message" class="info" style="display: none;"></div>
+
+                <!-- Results Content -->
+                <div id="results-content" style="display: none;">
+                    <!-- Metrics Grid -->
+                    <div class="metrics-grid" id="metrics-grid"></div>
+                    
+                    <!-- Tabs -->
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab('allocations')">
+                            <i class="fas fa-pie-chart"></i> Allocations
+                        </div>
+                        <div class="tab" onclick="switchTab('visualization')">
+                            <i class="fas fa-chart-bar"></i> Visualization
+                        </div>
+                        <div class="tab" onclick="switchTab('comparison')">
+                            <i class="fas fa-balance-scale"></i> Comparison
+                        </div>
+                        <div class="tab" onclick="switchTab('metrics')">
+                            <i class="fas fa-tachometer-alt"></i> Metrics
+                        </div>
+                    </div>
+
+                    <!-- Tab Contents -->
+                    <div id="allocations-tab" class="tab-content active">
+                        <h3><i class="fas fa-pie-chart"></i> Portfolio Allocations</h3>
+                        <table class="allocations-table" id="allocations-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-tag"></i> Symbol</th>
+                                    <th><i class="fas fa-percentage"></i> Allocation %</th>
+                                    <th><i class="fas fa-dollar-sign"></i> Investment ($)</th>
+                                    <th><i class="fas fa-chart-line"></i> Current Price</th>
+                                    <th><i class="fas fa-trending-up"></i> Expected Return</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allocations-body"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="visualization-tab" class="tab-content">
+                        <h3><i class="fas fa-chart-bar"></i> Portfolio Visualization</h3>
+                        <div id="portfolio-chart"></div>
+                    </div>
+
+                    <div id="comparison-tab" class="tab-content">
+                        <h3><i class="fas fa-balance-scale"></i> Method Comparison</h3>
+                        <div id="comparison-chart"></div>
+                    </div>
+
+                    <div id="metrics-tab" class="tab-content">
+                        <h3><i class="fas fa-tachometer-alt"></i> Detailed Metrics</h3>
+                        <div id="detailed-metrics"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4><i class="fas fa-info-circle"></i> About</h4>
+                    <p>Advanced quantum portfolio optimization using QAOA algorithms and real-time market data.</p>
+                </div>
+                <div class="footer-section">
+                    <h4><i class="fas fa-cogs"></i> Features</h4>
+                    <ul>
+                        <li>Quantum-Inspired Optimization</li>
+                        <li>Real-time Market Data</li>
+                        <li>Interactive Visualizations</li>
+                        <li>Multiple Risk Profiles</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4><i class="fas fa-link"></i> Quick Links</h4>
+                    <ul>
+                        <li><a href="#" onclick="validateStocks()">Validate Stocks</a></li>
+                        <li><a href="#" onclick="optimizePortfolio()">Optimize Portfolio</a></li>
+                        <li><a href="#" onclick="testAdvancedQuantum()">Test Quantum</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Quantum Portfolio Optimizer. Powered by quantum computing algorithms.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 

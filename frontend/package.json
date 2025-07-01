@@ -1,0 +1,23 @@
+{
+  "name": "quantum-portfolio-frontend",
+  "version": "1.0.0",
+  "description": "Modern frontend for Quantum Portfolio Optimization",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 3000",
+    "dev": "python -m http.server 3000",
+    "build": "echo 'No build step required for static HTML'",
+    "serve": "python -m http.server 3000"
+  },
+  "keywords": [
+    "quantum",
+    "portfolio",
+    "optimization",
+    "frontend",
+    "finance"
+  ],
+  "author": "Quantum Portfolio Team",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+} 
